@@ -5,6 +5,9 @@ from finetune import ft
 from llm_encode import compress as llm_compress
 from trad_encode import Compressor
 
+# Compressing with Tawa toolkit.
+os.system('./compress.sh')
+
 # Obtainin the path to datasets stored in 'datasets' directory.
 datasets = []
 for (root, directories, files) in os.walk('datasets'):
@@ -71,3 +74,4 @@ for dataset in datasets:
     for (model, kwargs) in trad_models.items():
                 compressor = Compressor(model, dataset, stat_path=c_stat_path)
                 compressor.compress(**kwargs)
+

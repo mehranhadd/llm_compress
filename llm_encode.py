@@ -237,28 +237,6 @@ class ZipModel():
 
         with open(text_file, "w", encoding="utf-8") as f:
             f.write(text)
-
-    def plot_rank_distribution(self, plot_type='histogram'):
-        if plot_type == 'histogram':
-            plt.figure(figsize=(10, 6))
-            plt.hist(self.ranks, bins=100, log=True)
-            plt.title('Distribution of Token Ranks')
-            plt.xlabel('Rank')
-            plt.ylabel('Frequency (log scale)')
-        elif plot_type == 'scatter':
-            plt.figure(figsize=(10, 6))
-            # Create a scatter plot where x is the index of the rank and y is the rank value
-            x = list(range(len(self.ranks)))  # Indexes of the ranks
-            y = self.ranks  # The rank values
-            plt.scatter(x, y, alpha=0.5)
-            plt.title('Scatter Plot of Token Ranks')
-            plt.xlabel('Sequence Position')
-            plt.ylabel('Rank')
-            plt.yscale('log')  # Using a log scale for the y-axis may help visualize large rank values
-        else:
-            print("Invalid plot type specified. Please choose 'histogram' or 'scatter'.")
-
-        plt.show()
         
 def compress(finetuned_models=None, original_model_names=None, context_sizes=[32], batch_size=64, file_path="../datasets/hindi/hindi_100m.txt",
               stat_path='stats/cstats.csv'):
@@ -315,10 +293,10 @@ def compress(finetuned_models=None, original_model_names=None, context_sizes=[32
         for context_size in context_sizes:
             zip_model = ZipModel(model, tokenizer_name, loaded_model, loaded_tokenizer, model in finetuned_models, context_size, batch_size)
             zip_models.append(zip_model)
-            stats[zip_model.model_name] = monitor(True, zip_model.zip_file, file_path, f"./zipped/{zip_model.model_name.replace('/', '-')}_{zip_model.CONTEXT_SIZE}_{zip_model.BATCH_SIZE}.gpz")
+            stats[zip_model.model_name] = monitor(True, zip_model.zip_file, file_path, f"./zipped/{os.path.basename(file_path)}_{zip_model.model_name.replace('/', '-')}_{zip_model.CONTEXT_SIZE}_{zip_model.BATCH_SIZE}.gpz")
 
             # save ranks of every zip model in a text file with same name in 'zipped' directory.
-            with open(f"zipped/{zip_model.model_name.replace('/', '-')}_{zip_model.CONTEXT_SIZE}_{zip_model.BATCH_SIZE}.txt", "w") as f:
+            with open(f"zipped/{os.path.basename(file_path)}_{zip_model.model_name.replace('/', '-')}_{zip_model.CONTEXT_SIZE}_{zip_model.BATCH_SIZE}.txt", "w") as f:
                 for rank in zip_model.ranks:
                     f.write(f"{rank}\n")
             
@@ -338,12 +316,12 @@ def compress(finetuned_models=None, original_model_names=None, context_sizes=[32
                     ranks_0.append(rank)
         ranks_0_15_per = (len(ranks_0_15)/len(zip_model.ranks))*100
         ranks_0_per = (len(ranks_0)/len(zip_model.ranks))*100
-        compressed_size = os.path.getsize(f"zipped/{zip_model.model_name.replace('/', '-')}_{zip_model.CONTEXT_SIZE}_{zip_model.BATCH_SIZE}.gpz")
+        compressed_size = os.path.getsize(f"zipped/{os.path.basename(file_path)}_{zip_model.model_name.replace('/', '-')}_{zip_model.CONTEXT_SIZE}_{zip_model.BATCH_SIZE}.gpz")
         dataset_size = os.path.getsize(file_path)
         compression_ratio = compressed_size/dataset_size
         stat = stats[zip_model.model_name]
         # Add the obtained statistics to the related file.
-        stat = [f'\n{zip_model.model_name}'] + stat + [f"{dataset_size} B", f"{compressed_size} B", f"{compression_ratio:.6f}", f"{ranks_0_15_per:.2f} %", f"{ranks_0_per:.2f} %"]
+        stat = [f'\n{zip_model.model_name}'] + stat + [f"{dataset_size}", f"{compressed_size}", f"{compression_ratio:.6f}", f"{ranks_0_15_per:.2f}", f"{ranks_0_per:.2f}"]
         with open(stat_path, 'a') as f:
             f.write(','.join(stat))
 

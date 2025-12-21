@@ -17,6 +17,8 @@ def monitor(llm=False, func=None, *args, **kwargs):
 
     # Create lists to record CPU and GPU usages.
     cpu_stats, gpu_stats = [], []
+    # Create a variable to store the peak memory usage.
+    mem_peak = 0
 
     def sampler():
         """Samples CPU load and GPU load and memory usage of the running function every 0.5 second in a separate thread."""
@@ -25,6 +27,7 @@ def monitor(llm=False, func=None, *args, **kwargs):
             gpus = GPUtil.getGPUs()
             gpu_stats.append([(gpu.load, gpu.memoryUsed) for gpu in gpus])
             cpu_stats.append(process.cpu_percent(interval=None) / psutil.cpu_count())
+            mem_peak = max(mem_peak, process.memory_info().rss)
             sleep(0.5)
 
     # Get the process ID of the current process.
@@ -35,8 +38,8 @@ def monitor(llm=False, func=None, *args, **kwargs):
     t = threading.Thread(target=sampler)
     t.start()
 
-    # Get the overall memory usage before executing the function.
-    before_m = process.memory_full_info().uss
+    ## Get the overall memory usage before executing the function.
+    #before_m = process.memory_full_info().uss
     # Record the starting time of the execution.
     start = perf_counter()
     # Run the funciton
@@ -48,8 +51,8 @@ def monitor(llm=False, func=None, *args, **kwargs):
         result = func(*args, **kwargs)
     # Record the end time of the execution.
     end = perf_counter()
-    # Get the overall memory usage after the execution.
-    after_m = process.memory_full_info().uss
+    ## Get the overall memory usage after the execution.
+    #after_m = process.memory_full_info().uss
     # Wait for GPU work to finish.
     torch.cuda.synchronize()
     # Stop the sampler function and join the other thread.
@@ -58,6 +61,7 @@ def monitor(llm=False, func=None, *args, **kwargs):
 
     # Calculating the execution time.
     time = f"{end - start:.2f} s"
+    # Create lists to store the average and peak GPU usage, and GPU memory usage of each GPU unit.
     gpus_avg, gpus_peak, gpus_mem = [], [], []
     for i in range(len(gpu_stats[0])):
         # Calculate the average GPU load and memory usage of each GPU.
@@ -72,9 +76,9 @@ def monitor(llm=False, func=None, *args, **kwargs):
     gpu_mem = f"{max(gpus_mem):.2f} MB"
     cpu_avg = f"{sum(cpu_stats)/len(cpu_stats):.2f} %"
     cpu_peak = f"{max(cpu_stats):.2f} %"
-    # Calculating the memory usage.
-    mem = f"{(after_m - before_m) / (1024 * 1024):.2f} MB"
-    stats = [time,gpu_avg,gpu_peak,gpu_mem,cpu_avg,cpu_peak,mem]
+    ## Calculating the memory usage.
+    #mem = f"{(after_m - before_m) / (1024 * 1024):.2f} MB"
+    stats = [time,gpu_avg,gpu_peak,gpu_mem,cpu_avg,cpu_peak,mem_peak]
     if llm:
         return stats
     else:

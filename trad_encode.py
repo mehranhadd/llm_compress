@@ -28,7 +28,7 @@ class Compressor:
         cr = compressed_size / self.file_size   # Calculate the compression rate(compressed size/original size).
         # Adds the statistics to the related file. Note! The last two columns of the statistics file belong to the success rate of the
         # LLM to predict tokens correctly(ranks_0_15 and ranks_0) and are not applicable to traditional algorithms.
-        stats = [f'\n{self.alg.__name__}'] + stats + [f"{self.file_size} B", f"{compressed_size} B", f"{cr:.6f}", "NA", "NA"]
+        stats = [f'\n{self.alg.__name__}'] + stats + [f"{self.file_size}", f"{compressed_size}", f"{cr:.6f}", "NA", "NA"]
         with open(self.stat, 'a') as f:
             f.write(','.join(stats))
 
