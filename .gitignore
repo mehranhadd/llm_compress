@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.venv/
+venv/
+.pytest_cache/
+.coverage
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Local datasets, checkpoints, outputs, and experiment logs
+datasets/*
+!datasets/.gitkeep
+finetuned_models/
+models/
+output/
+stats/
+zipped/
+tawa_logs/
+addresses
+m_addresses
+
+# OS/editor files
+.DS_Store
+.idea/
+.vscode/

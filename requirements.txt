@@ -8,3 +8,4 @@ GPUtil==1.4.0
 psutil==7.0.0
 matplotlib==3.10.6
 tqdm==4.67.1
+pyppmd
